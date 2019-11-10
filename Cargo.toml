@@ -1,0 +1,14 @@
+[package]
+name = "wait-around"
+version = "0.1.0"
+authors = ["AJ Frantz <aj@ajfrantz.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+futures = "0.3"
+
+[dev-dependencies]
+proptest = "0.9"
+proptest-derive = "0.1"
