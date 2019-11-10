@@ -185,6 +185,14 @@ mod tests {
             }
         }
 
+        fn is_empty(&self) -> bool {
+            self.data.is_empty()
+        }
+
+        fn is_full(&self) -> bool {
+            self.data.len() == self.capacity
+        }
+
         fn write(&mut self, bytes: &[u8]) -> usize {
             let before = self.data.len();
 
@@ -212,7 +220,9 @@ mod tests {
                     Operation::Write(data) => {
                         let written = tx.write(&data).now_or_never().unwrap_or(Ok(0)).expect("can't fail");
 
-                        // We might have written less than the full buffer due to wrapping.
+                        // We might have written less than the full buffer due to wrapping, but we
+                        // should make *some* progress as long as there's space.
+                        prop_assert!(model.is_full() || data.is_empty() || written > 0);
                         prop_assert_eq!(model.write(&data[..written]), written);
                     }
 
@@ -221,9 +231,10 @@ mod tests {
                         let mut buf = [0; 256];
                         let nread = rx.read(&mut buf[..n]).now_or_never().unwrap_or(Ok(0)).expect("can't fail");
 
-                        // We might have read less than the full buffer due to wrapping.
-                        let expected = model.read(nread);
-                        prop_assert_eq!(expected, &buf[..nread]);
+                        // We might have read less than the full buffer due to wrapping, but we
+                        // should make *some* progress as long as there's some data.
+                        prop_assert!(model.is_empty() || n == 0 || nread > 0);
+                        prop_assert_eq!(model.read(nread), &buf[..nread]);
                     }
                 }
             }
